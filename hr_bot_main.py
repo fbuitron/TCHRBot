@@ -12,11 +12,11 @@ Go ahead, have fun!
 '''
 
 # starterbot's ID as an environment variable
-BOT_ID = "U3YFM2A80"
+BOT_ID# =
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
-DICT_USER = {'U03G12D6J':100, 'U02R9L8KP':100, 'U034JJ2UK':100}
+DICT_USER
 NUMBER_OF_REACTIONS_INT = 1
 NUMBER_OF_REACTIONS = str(NUMBER_OF_REACTIONS_INT)
 
@@ -35,11 +35,7 @@ INSTRUCTIONS_MSG = "Hi there! my name is HR. I can listen to complaints or prais
                " Type `@hr "+LEADER_BOARD_COMMAND+"` to get the top 5 worst employees in the HR score."
 
 
-# [{'text': '<@U3YFM2A80> kudos <@U03G12D6J> 200 She did Wackos Billboard', 'ts': '1485921472.000012', 'user': 'U02R9L8KP', 'team': 'T02RATPAE', 'type': 'message', 'channel': 'D3ZT1DZD4'}]
-# reaction_test = [{'reaction': '+1', 'event_ts': '1485921479.839814', 'ts': '1485921479.000014', 'item': {'type': 'message', 'ts': '1485921472.000012', 'channel': 'D3ZT1DZD4'}, 'user': 'U02R9L8KP', 'item_user': 'U02R9L8KP', 'type': 'reaction_added'}]
-# instantiate Slack & Twilio clients
-TEST_TEXT = [{'text': '<@U3YFM2A80> kudos <@U03G12D6J> 200 She did Wackos Billboard', 'ts': '1485921472.000012', 'user': 'U02R9L8KP', 'team': 'T02RATPAE', 'type': 'message', 'channel': 'D3ZT1DZD4'}]
-slack_client = SlackClient('xoxb-134531078272-ELnFHr24sSnpVP2omIi8oltk')
+slack_client
 
 list_of_operations = []
 
@@ -107,7 +103,6 @@ def apply_point(increment, amount, user):
         DICT_USER[user] = DICT_USER[user] + int(amount)
     else:
         DICT_USER[user] = DICT_USER[user] - int(amount)
-    # DICT_USER[user] = DICT_USER[user] + (amount if increment else -1 * amount)
 
 def clean_up_user_name(username):
     if username.find("<@") == -1 :
@@ -193,36 +188,26 @@ def parse_reaction(reaction_json):
             vote = MSG_Votes(reaction_json["reaction"], reaction_json["item"]["channel"],reaction_json["user"],reaction_json["item"]["ts"], reaction_json["item_user"])
             handle_reaction(vote)
 
-reaction_test = [{'reaction': '+1', 'event_ts': '1485921479.839814', 'ts': '1485921479.000014', 'item': {'type': 'message', 'ts': '1485921472.000012', 'channel': 'D3ZT1DZD4'}, 'user': 'U02R9L8KP', 'item_user': 'U02R9L8KP', 'type': 'reaction_added'}]
-text_test = [{'text': '<@U3YFM2A80> kudos <@U03G12D6J> 200 She did Wackos Billboard', 'ts': '1485921472.000012', 'user': 'U02R9L8KP', 'team': 'T02RATPAE', 'type': 'message', 'channel': 'D3ZT1DZD4'}]
 def parse_slack_output(slack_rtm_output):
     output_list = slack_rtm_output
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
-                # return text after the @ mention, whitespace removed
                 op = parse_msg(output)
                 return op
-                # return output['text'].split(AT_BOT)[1].strip().lower(), \
-                #        output['channel']
             if output and 'reaction' in output:
                 parse_reaction(output)
     return None
 
 if __name__ == "__main__":
-    READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
+    READ_WEBSOCKET_DELAY = 1
     if slack_client.rtm_connect():
         print("Connection succesful")
         while True:
             operation = parse_slack_output(slack_client.rtm_read())
-            # if operation:
-                # handle_command(operation)
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
-    # op = parse_slack_output(text_test)
-    # handle_command(op)
-    # operation = parse_slack_output(reaction_test)
 
 
     
