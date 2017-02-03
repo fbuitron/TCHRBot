@@ -70,38 +70,21 @@ def publish(text,channel):
                           text=text, as_user=True)
 
 def handle_command(hr_operation):
-    print("CHECK PARAMETERS authro reason target amount channel")
-    print(hr_operation.author)
-    print(hr_operation.reason)
-    print(hr_operation.target)
-    print(hr_operation.amount)
-    print(hr_operation.channel)
-
+    
     list_of_operations.append(hr_operation)
-
-    # # response = NOT_FOUND_MSGS[0]
-    # # if (hr_operation.startswith(REBUKE_COMMAND)) or (command.startswith(CONGRAT_COMMAND)):
     response = "If you get at least *"+NUMBER_OF_REACTIONS+"* reactions, consider it done!"
-    # # elif command.startswith(LEADER_BOARD_COMMAND):
-    # #     print("What are we doing here")
-    # print(response)
     publish(response, hr_operation.channel)
-    # slack_client.api_call("chat.postMessage", channel=channel,
-                        #   text=response, as_user=True)
 
 def handle_reaction(vote):
     #Look for the operation and add vote if found
     if len(list_of_operations) > 0:
-        print("There are ",len(list_of_operations)," pending opertions")
         for op in list_of_operations:
             # check if the vote is for the operation
             if op.timestamp == vote.msg_ts and op.author == vote.msg_author and vote.channel == op.channel:
-                #is for the same MSG_Votes
-                #check if the vote is from the author
-                # if vote.msg_author == vote.userReacting:
-                #     publish("You can't vote, you sneaky cheater! -10pts for you <@"+vote.msg_author+">", vote.channel)
-                #     return
-                print("DEBUG 1 ",op.target," - == - ",vote.userReacting)
+                
+                if vote.msg_author == vote.userReacting:
+                    publish("You can't vote, you sneaky cheater! -10pts for you <@"+vote.msg_author+">", vote.channel)
+                    return
                 if op.target == vote.userReacting and op.isPositive:
                     publish("Hey, what do you think I am? An empty robot? You cannot vote for yourself, cheater! -10pts for you <@"+vote.userReacting+">", vote.channel)
                     return
@@ -163,8 +146,6 @@ def parse_txt(msg_str, channel):
                 else:
                     isPositive = False
                 if isUser(bySpace[2]):
-                    print("DEBUG 2")
-                    print(bySpace[2])
                     target = bySpace[2]
                     if (bySpace[3].isdigit()):
                         amount = bySpace[3]
@@ -188,30 +169,20 @@ def parse_txt(msg_str, channel):
             errorMsg = "C'mon! You can do better than that"
     else:
         errorMsg = "At least you mentioned me :smiley:"
-    print("debug 3 ",target)
     return errorMsg, valid, target, isPositive, amount, reason
 
 def parse_msg(msg_json):
     channel = msg_json["channel"]
     errorMSG, valid, target, isPositive, amount, reason = parse_txt(msg_json["text"], channel)
-    print("DEBUG 3.5 ",target)
     if (errorMSG):
-        print("ERROR!")
-        print(errorMSG)
         msgResponse = errorMSG + ERROR_SUFFIX
         publish(msgResponse,channel)
     elif not (isPositive == None):
         channel = msg_json["channel"]
         author = msg_json["user"]
         timestamp = msg_json["ts"]
-        print("DEBUG 4")
-        print("TARGET:: ",target)
         op = HR_Operation(author,isPositive, target, amount, reason, channel, timestamp)
         handle_command(op)
-    elif valid:
-        # msgResponse = errorMSG + ERROR_SUFFIX
-        # publish(msgResponse,channel)
-        print("Is Valid")
     else:
         msgResponse = errorMSG + ERROR_SUFFIX
         publish(msgResponse,channel)
@@ -219,24 +190,18 @@ def parse_msg(msg_json):
 def parse_reaction(reaction_json):
     if reaction_json["item"]:
         if reaction_json["type"] == 'reaction_added':
-            print(reaction_json["item"])
-            print(reaction_json["item"]["ts"])
-            print(reaction_json["item"]["channel"])
             vote = MSG_Votes(reaction_json["reaction"], reaction_json["item"]["channel"],reaction_json["user"],reaction_json["item"]["ts"], reaction_json["item_user"])
             handle_reaction(vote)
 
 reaction_test = [{'reaction': '+1', 'event_ts': '1485921479.839814', 'ts': '1485921479.000014', 'item': {'type': 'message', 'ts': '1485921472.000012', 'channel': 'D3ZT1DZD4'}, 'user': 'U02R9L8KP', 'item_user': 'U02R9L8KP', 'type': 'reaction_added'}]
 text_test = [{'text': '<@U3YFM2A80> kudos <@U03G12D6J> 200 She did Wackos Billboard', 'ts': '1485921472.000012', 'user': 'U02R9L8KP', 'team': 'T02RATPAE', 'type': 'message', 'channel': 'D3ZT1DZD4'}]
 def parse_slack_output(slack_rtm_output):
-    # print(slack_rtm_output)
     output_list = slack_rtm_output
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
                 # return text after the @ mention, whitespace removed
                 op = parse_msg(output)
-                print("Getting an operation ")
-                print(op)
                 return op
                 # return output['text'].split(AT_BOT)[1].strip().lower(), \
                 #        output['channel']
@@ -247,7 +212,7 @@ def parse_slack_output(slack_rtm_output):
 if __name__ == "__main__":
     READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
-        print("StarterBot connected and running!")
+        print("Connection succesful")
         while True:
             operation = parse_slack_output(slack_client.rtm_read())
             # if operation:
