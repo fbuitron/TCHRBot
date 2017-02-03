@@ -12,13 +12,14 @@ Go ahead, have fun!
 '''
 
 # starterbot's ID as an environment variable
-BOT_ID# =
+BOT_ID = "U3YFM2A80"
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
-DICT_USER
-NUMBER_OF_REACTIONS_INT = 1
+DICT_USER = {}
+NUMBER_OF_REACTIONS_INT = 3
 NUMBER_OF_REACTIONS = str(NUMBER_OF_REACTIONS_INT)
+INITIAL_SCORE = 0
 
 REBUKE_COMMAND = "boo"
 CONGRAT_COMMAND = "kudos"
@@ -27,7 +28,7 @@ LEADER_BOARD_COMMAND = "leaderboard"
 
 ERROR_SUFFIX = ". Type `@hr help` for instructions"
 
-NOT_FOUND_MSGS = ['Not sure what you meant. I am still being coded by <@U02R9L8KP>! Sorry :pensive:','I am very busy right now! Maybe after a :coffee:', 'Nope']
+NOT_FOUND_MSGS = ['Not sure what you meant. I am still being coded! Sorry :pensive:','I am very busy right now! Maybe after a :coffee:', 'Nope']
 INSTRUCTIONS_MSG = "Hi there! my name is HR. I can listen to complaints or praise between coworkers. You can raise a complaint by using the *" + REBUKE_COMMAND +"*"\
                " command or praise someone by using the *"+CONGRAT_COMMAND+"* command. Just tell me: `@hr "+CONGRAT_COMMAND+" @aric 200 He helped me with my computer` "\
                " If your message gets 3 OR + votes _@aric_ gets 200 points. On the contrary if you tell me: `@hr "+REBUKE_COMMAND+" @aric 500 he said the b word at lunch `"\
@@ -35,7 +36,7 @@ INSTRUCTIONS_MSG = "Hi there! my name is HR. I can listen to complaints or prais
                " Type `@hr "+LEADER_BOARD_COMMAND+"` to get the top 5 worst employees in the HR score."
 
 
-slack_client
+slack_client = SlackClient('xoxb-134531078272-ncU1csi9Q19bIckjFx8EI2RZ')
 
 list_of_operations = []
 
@@ -79,13 +80,16 @@ def handle_reaction(vote):
             if op.timestamp == vote.msg_ts and op.author == vote.msg_author and vote.channel == op.channel:
                 
                 if vote.msg_author == vote.userReacting:
+                    apply_point(False,10,vote.msg_author)
                     publish("You can't vote, you sneaky cheater! -10pts for you <@"+vote.msg_author+">", vote.channel)
                     return
                 if op.target == vote.userReacting and op.isPositive:
+                    apply_point(False,10, op.target)
                     publish("Hey, what do you think I am? An empty robot? You cannot vote for yourself, cheater! -10pts for you <@"+vote.userReacting+">", vote.channel)
                     return
                 for op_vote in op.votes:
                     if vote.userReacting == op_vote.userReacting:
+                       apply_point(False,10, vote.userReacting)
                        publish("Hey <@"+vote.userReacting+">, you can't vote twice, cheater! -10pts for you ", vote.channel)
                        return
                 op.votes.append(vote)
@@ -93,12 +97,15 @@ def handle_reaction(vote):
 
 def refresh_leaderboard():
     for op in list_of_operations:
-        if len(op.votes) >= NUMBER_OF_REACTIONS_INT:
+        if len(op.votes) == NUMBER_OF_REACTIONS_INT:
             apply_point(op.isPositive, op.amount, op.target)
             msg = "The people had spoken. <@"+op.target+"> has *"+op.amount+"* "+(" more " if op.isPositive else " less ")+" points"
             publish(msg, op.channel)
 
 def apply_point(increment, amount, user):
+    if not user in DICT_USER:
+        DICT_USER[user] = INITIAL_SCORE
+        
     if increment:
         DICT_USER[user] = DICT_USER[user] + int(amount)
     else:
@@ -117,9 +124,12 @@ def handle_help(channel):
 def handle_leader_board(channel):
     index = 1
     msg = "Ok, sure sweetheart!\n"
-    for key, value in DICT_USER.iteritems():
-        msg += str(""+str(index)+"- <@"+key+"> ---> "+str(value)+"\n")
-        index += 1
+    if len(DICT_USER) > 0:
+        for key, value in DICT_USER.iteritems():
+            msg += str(""+str(index)+"- <@"+key+"> ---> "+str(value)+"\n")
+            index += 1
+    else:
+        msg= "I feel so lonely, no one voted yet... :crying_cat_face:"
     publish(msg, channel)
 
 def isUser(subStr):
@@ -178,7 +188,7 @@ def parse_msg(msg_json):
         timestamp = msg_json["ts"]
         op = HR_Operation(author,isPositive, target, amount, reason, channel, timestamp)
         handle_command(op)
-    else:
+    elif not valid:
         msgResponse = errorMSG + ERROR_SUFFIX
         publish(msgResponse,channel)
 
