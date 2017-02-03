@@ -12,7 +12,7 @@ Go ahead, have fun!
 '''
 
 # starterbot's ID as an environment variable
-BOT_ID = "U3YFM2A80"
+BOT_ID = ""
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
@@ -36,7 +36,7 @@ INSTRUCTIONS_MSG = "Hi there! my name is HR. I can listen to complaints or prais
                " Type `@hr "+LEADER_BOARD_COMMAND+"` to get the top 5 worst employees in the HR score."
 
 
-slack_client = SlackClient('xoxb-134531078272-ncU1csi9Q19bIckjFx8EI2RZ')
+slack_client = SlackClient('ID')
 
 list_of_operations = []
 
