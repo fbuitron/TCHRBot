@@ -12,8 +12,8 @@ Go ahead, have fun!
 '''
 
 # starterbot's ID as an environment variable
-BOT_ID = ""
-
+BOT_ID = os.environ["HRBOT_ID"]
+BOT_TOKEN = os.environ["HRBOT_TOKEN"]
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
 DICT_USER = {}
@@ -36,7 +36,7 @@ INSTRUCTIONS_MSG = "Hi there! my name is HR. I can listen to complaints or prais
                " Type `@hr "+LEADER_BOARD_COMMAND+"` to get the top 5 worst employees in the HR score."
 
 
-slack_client = SlackClient('ID')
+slack_client = SlackClient(BOT_TOKEN)
 
 list_of_operations = []
 
