@@ -104,6 +104,12 @@ def handle_reaction(vote):
                 op.votes.append(vote)
         refresh_leaderboard()
 
+def process_pending_operations():
+    for op in list_of_operations:
+        if not op.processed and op.timestamp - time.time() > OPERATION_TIMEOUT:
+            apply_point(False,10,hr_operation.target)
+            publish("You didn't get traction dude. Are you falsely accusing your coworker -10 pts for you <@"+op.author+">.", hr_operation.channel)
+
 def refresh_leaderboard():
     for op in list_of_operations:
         if len(op.votes) == NUMBER_OF_REACTIONS_INT and not op.processed:
@@ -226,6 +232,7 @@ if __name__ == "__main__":
         print("Connection succesful")
         while True:
             operation = parse_slack_output(slack_client.rtm_read())
+            process_pending_operations()
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
