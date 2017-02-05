@@ -50,6 +50,7 @@ class HR_Operation:
         self.channel = channel
         self.timestamp = timestamp
         self.votes = []
+        self.processed = False
     
     def addVote(vote):
         self.votes.append(vote)
@@ -97,8 +98,9 @@ def handle_reaction(vote):
 
 def refresh_leaderboard():
     for op in list_of_operations:
-        if len(op.votes) == NUMBER_OF_REACTIONS_INT:
+        if len(op.votes) == NUMBER_OF_REACTIONS_INT and not op.processed:
             apply_point(op.isPositive, op.amount, op.target)
+            op.processed = True
             msg = "The people had spoken. <@"+op.target+"> has *"+op.amount+"* "+(" more " if op.isPositive else " less ")+" points"
             publish(msg, op.channel)
 
