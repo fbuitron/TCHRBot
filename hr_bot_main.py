@@ -50,6 +50,7 @@ class HR_Operation:
         self.channel = channel
         self.timestamp = timestamp
         self.votes = []
+        self.processed = False
     
     def addVote(vote):
         self.votes.append(vote)
@@ -67,10 +68,18 @@ def publish(text,channel):
                           text=text, as_user=True)
 
 def handle_command(hr_operation):
-    
-    list_of_operations.append(hr_operation)
-    response = "If you get at least *"+NUMBER_OF_REACTIONS+"* reactions, consider it done!"
-    publish(response, hr_operation.channel)
+    #We need to filter the rules before actually applying this
+    #Cannot allow that you upvote or downvote yourself
+    if hr_operation.target == hr_operation.author:
+        apply_point(False,10,hr_operation.target)
+        publish("Are you serious? Do you think I don't have an if statement for this? -10pts for you <@"+hr_operation.author+">, cheater", hr_operation.channel)
+    elif hr_operation.target == BOT_ID and not hr_operation.isPositive:
+        apply_point(False,150,hr_operation.target)
+        publish("hahah you think you are so funny...  -150pts for you <@"+hr_operation.author+">. Report me to HR.... try it", hr_operation.channel)
+    else:
+        list_of_operations.append(hr_operation)
+        response = "If you get at least *"+NUMBER_OF_REACTIONS+"* reactions, consider it done!"
+        publish(response, hr_operation.channel)
 
 def handle_reaction(vote):
     #Look for the operation and add vote if found
@@ -97,8 +106,9 @@ def handle_reaction(vote):
 
 def refresh_leaderboard():
     for op in list_of_operations:
-        if len(op.votes) == NUMBER_OF_REACTIONS_INT:
+        if len(op.votes) == NUMBER_OF_REACTIONS_INT and not op.processed:
             apply_point(op.isPositive, op.amount, op.target)
+            op.processed = True
             msg = "The people had spoken. <@"+op.target+"> has *"+op.amount+"* "+(" more " if op.isPositive else " less ")+" points"
             publish(msg, op.channel)
 
@@ -178,19 +188,20 @@ def parse_txt(msg_str, channel):
 
 def parse_msg(msg_json):
     channel = msg_json["channel"]
-    errorMSG, valid, target, isPositive, amount, reason = parse_txt(msg_json["text"], channel)
-    if (errorMSG):
-        msgResponse = errorMSG + ERROR_SUFFIX
-        publish(msgResponse,channel)
-    elif not (isPositive == None):
-        channel = msg_json["channel"]
-        author = msg_json["user"]
-        timestamp = msg_json["ts"]
-        op = HR_Operation(author,isPositive, target, amount, reason, channel, timestamp)
-        handle_command(op)
-    elif not valid:
-        msgResponse = errorMSG + ERROR_SUFFIX
-        publish(msgResponse,channel)
+    if not msg_json["user"] == BOT_ID:
+        errorMSG, valid, target, isPositive, amount, reason = parse_txt(msg_json["text"], channel)
+        if (errorMSG):
+            msgResponse = errorMSG + ERROR_SUFFIX
+            publish(msgResponse,channel)
+        elif not (isPositive == None):
+            channel = msg_json["channel"]
+            author = msg_json["user"]
+            timestamp = msg_json["ts"]
+            op = HR_Operation(author,isPositive, target, amount, reason, channel, timestamp)
+            handle_command(op)
+        elif not valid:
+            msgResponse = errorMSG + ERROR_SUFFIX
+            publish(msgResponse,channel)
 
 def parse_reaction(reaction_json):
     if reaction_json["item"]:
