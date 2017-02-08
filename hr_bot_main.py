@@ -20,7 +20,7 @@ DICT_USER = {}
 NUMBER_OF_REACTIONS_INT = 3
 NUMBER_OF_REACTIONS = str(NUMBER_OF_REACTIONS_INT)
 INITIAL_SCORE = 0
-
+OPERATION_TIMEOUT = 300 #5 minutes
 REBUKE_COMMAND = "boo"
 CONGRAT_COMMAND = "kudos"
 HELP_COMMAND = "help"
@@ -87,7 +87,6 @@ def handle_reaction(vote):
         for op in list_of_operations:
             # check if the vote is for the operation
             if op.timestamp == vote.msg_ts and op.author == vote.msg_author and vote.channel == op.channel:
-                
                 if vote.msg_author == vote.userReacting:
                     apply_point(False,10,vote.msg_author)
                     publish("You can't vote, you sneaky cheater! -10pts for you <@"+vote.msg_author+">", vote.channel)
@@ -103,6 +102,22 @@ def handle_reaction(vote):
                        return
                 op.votes.append(vote)
         refresh_leaderboard()
+
+def process_pending_operations():
+    for op in list_of_operations:
+        if not op.processed and (time.time() - float(op.timestamp)) > OPERATION_TIMEOUT:
+            penalty_points = 10
+            msg = ""
+            if op.isPositive:
+                penalty_points = 5
+                msg = "Not enough votes, <@"+op.author+">. Next time try to get some traction. I have to take 5 points because of RAM/CPU wasted time. Good luck next time. :smile: "
+            else:
+                penalty_points = 10
+                msg = "You didn't get traction, dude. Are you falsely accusing your coworker -10 pts for you <@"+op.author+">."
+            
+            apply_point(False,penalty_points,op.author)
+            op.processed = True
+            publish(msg, op.channel)
 
 def refresh_leaderboard():
     for op in list_of_operations:
@@ -226,6 +241,7 @@ if __name__ == "__main__":
         print("Connection succesful")
         while True:
             operation = parse_slack_output(slack_client.rtm_read())
+            process_pending_operations()
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
