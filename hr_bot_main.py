@@ -221,6 +221,14 @@ def parse_msg(msg_json):
 def parse_reaction(reaction_json):
     if reaction_json["item"]:
         if reaction_json["type"] == 'reaction_added':
+            if 'channel' not in reaction_json["item"]:
+                return
+            if 'user' not in reaction_json:
+                return
+            if 'ts' not in reaction_json["item"]:
+                return
+            if 'item_user' not in reaction_json:
+                return
             vote = MSG_Votes(reaction_json["reaction"], reaction_json["item"]["channel"],reaction_json["user"],reaction_json["item"]["ts"], reaction_json["item_user"])
             handle_reaction(vote)
 
