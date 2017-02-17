@@ -229,17 +229,22 @@ def parse_reaction(reaction_json):
                 return
             if 'item_user' not in reaction_json:
                 return
+            if 'reaction' not in reaction_json:
+                return
             vote = MSG_Votes(reaction_json["reaction"], reaction_json["item"]["channel"],reaction_json["user"],reaction_json["item"]["ts"], reaction_json["item_user"])
             handle_reaction(vote)
+            return vote
 
 def parse_slack_output(slack_rtm_output):
     output_list = slack_rtm_output
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
+                print(output)
                 op = parse_msg(output)
                 return op
             if output and 'reaction' in output:
+                print(output)
                 parse_reaction(output)
     return None
 
