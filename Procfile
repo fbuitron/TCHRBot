@@ -1,1 +1,1 @@
-web: python hr_bot_main.py 
+app: python hr_bot_main.py 
