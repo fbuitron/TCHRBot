@@ -234,6 +234,7 @@ def parse_reaction(reaction_json):
             vote = MSG_Votes(reaction_json["reaction"], reaction_json["item"]["channel"],reaction_json["user"],reaction_json["item"]["ts"], reaction_json["item_user"])
             handle_reaction(vote)
             return vote
+    return None
 
 def parse_slack_output(slack_rtm_output):
     output_list = slack_rtm_output
